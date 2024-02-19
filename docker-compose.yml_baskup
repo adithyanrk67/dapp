@@ -1,0 +1,40 @@
+version: '3'
+services:
+  db:
+    image: mysql:8
+    container_name: my-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPassword
+      MYSQL_DATABASE: loginapp_db
+      MYSQL_USER: login_user
+      MYSQL_PASSWORD: Login_app@123
+    ports:
+      - "3306:3306"
+    networks:
+      - my-network
+
+  web:
+    build: .
+    command: ["dockerize", "-wait", "tcp://db:3306", "-timeout", "20s", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - migrate-service
+    networks:
+      - my-network
+
+  migrate-service:
+    build: .
+    command: ["python", "manage.py", "migrate"]
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    networks:
+      - my-network
+
+networks:
+  my-network:
